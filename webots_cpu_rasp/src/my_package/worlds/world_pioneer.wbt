@@ -385,4 +385,10 @@ DEF OBSTACLE_40 Solid {
 Pioneer3dx {
   name "pioneer"
   controller "<extern>"
+
+  extensionSlot [
+    Kinect {
+      translation 0 0 0.5
+    }
+  ]
 }
