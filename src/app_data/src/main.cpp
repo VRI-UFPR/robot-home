@@ -1,5 +1,4 @@
 /* BSD 2-Clause License
- * 
  * Copyright (c) 2024, Visao Robotica e Imagem (VRI)
  *  - Felipe Bombardelli <felipebombardelli@gmail.com>
  * 
@@ -29,7 +28,8 @@
 //  Header
 // ============================================================================
 
-#include <errno.h>
+// #include <errno.h>
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -65,6 +65,7 @@ uint8_t g_cam1_data[1024*1024];
 
 uint32_t g_cam2_size = 0;
 uint8_t g_cam2_data[1024*1024];
+
 
 // ============================================================================
 //  Private Functions
@@ -109,19 +110,19 @@ int main() {
         // ufr_get(&encoders, "^ff", &left, &right);
 
         if ( ufr_recv_async(&cam1) == UFR_OK ) {
-            g_cam1_size = ufr_get_size(&cam1);
-            const uint8_t* ros_image = ufr_get_raw_ptr(&cam1);
+            g_cam1_size = ufr_get_nbytes(&cam1);
+            const uint8_t* ros_image = ufr_get_rawptr(&cam1);
             // ufr_get_raw(&cam1, g_cam1_data, g_cam1_size);
-            memcpy(g_cam1_data, ros_image, g_cam1_size);
+            // memcpy(g_cam1_data, ros_image, g_cam1_size);
             // printf("opa1 %d %p\n", g_cam1_size, g_cam1_data);
         }
 
         if ( ufr_recv_async(&cam2) == UFR_OK ) {
-            g_cam2_size = ufr_get_size(&cam2);
-            const uint8_t* ros_image = ufr_get_raw_ptr(&cam2);
+            g_cam2_size = ufr_get_nbytes(&cam2);
+            const uint8_t* ros_image = ufr_get_rawptr(&cam2);
             // g_cam2_data = ufr_get_raw_ptr(&cam2);
             // ufr_get_raw(&cam2, g_cam2_data, g_cam2_size);
-            memcpy(g_cam2_data, ros_image, g_cam2_size);
+            // memcpy(g_cam2_data, ros_image, g_cam2_size);
             // printf("opa2 %d %p\n", g_cam2_size, g_cam2_data);
         }
 
@@ -130,9 +131,9 @@ int main() {
             ufr_get(&scan, "fffffff", &dummy, &dummy, &dummy, &dummy, &dummy, &dummy, &dummy);
 
             // update global variable
-            const size_t size = ufr_get_size(&scan);
+            const size_t size = ufr_get_nbytes(&scan);
             g_lidar.ranges.resize(size);
-            ufr_get_af32(&scan, g_lidar.ranges.data(), size);
+            // ufr_get_af32(&scan, g_lidar.ranges.data(), size);
             g_lidar.last = time(0);
             // printf("lidar\n");
         }
@@ -217,5 +218,6 @@ int main() {
         }
         // END SERVIDOR
     }
+
     return 0;
 }

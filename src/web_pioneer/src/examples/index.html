@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html><head>
+    <meta charset="UTF-8"> 
+    <script src="run_prettify.js"></script>
+    <link href="../bootstrap.min.css" rel="stylesheet">
+</head><body>
+
+<div class="container"><div class="row">
+
+    <h1> 0. Instalação </h1>
+
+    Funcionará apenas no Ubuntu 22. Baixar o .deb.
+
+    <h1> 1. Controlar o Robô </h1>
+
+<pre class="prettyprint lang-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;ufr.h&gt;
+
+int main() {
+    // Abre um publicador
+    link_t motors = ufr_publisher("@new ros_humble @coder ros_humble:twist @topic cmd_vel"); 
+
+    // Loop principal
+    while( ufr_loop_ok() ) {
+        ufr_put(&motors, "ff\n", 0.0, 0.125); // velocidade (m/s) e velocidade rotacional (rad/s)
+        sleep(1);
+    }
+
+    // Fim
+    ufr_close(&motors);
+    return 0;
+}
+</pre>
+
+
+    <h1> 2. Acessar a Odometria e o Lidar </h1>
+
+<pre class="prettyprint lang-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;ufr.h&gt;
+
+int main() {
+    float x, y, th;
+    float lidar[600];
+
+    // Abre um publicador
+    link_t odom = ufr_subscriber("@new ros_humble @coder ros_humble:pose2d @topic odom");
+    link_t scan = ufr_subscriber("@new ros_humble @coder ros_humble:lidar @topic scan");
+
+    // Loop principal
+    while( ufr_loop_ok() ) {
+        // Le a odometria
+        if ( ufr_recv_asyn(&odom) ) {
+            ufr_get(&odom, "fff", &x, &y, &th);
+            printf("odom %f %f %f\n", x, y, th);
+        }
+
+        // Le o Lidar
+        if ( ufr_recv_asyn(&scan) ) {
+            const int nitems = ufr_get_af32(&scan, lidar, 600);
+            printf("scan %f %f ... %f\n", lidar[0], lidar[1], lidar[nitems-1]);
+        }
+    }
+
+    // Fim
+    ufr_close(&odom);
+    ufr_close(&lidar);
+    return 0;
+}
+</pre>
+
+
+
+    <h1> 3. Acessar as Cameras </h1>
+
+    <pre class="prettyprint lang-cpp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;ufr.h&gt;
+#include &lt;unistd.h&gt;
+#include "opencv2/opencv.hpp"
+
+using namespace std;
+using namespace cv;
+
+int main() {
+    // Abre um publicador
+    // link_t camera1 = ufr_subscriber("@new video @id 0");   // camera
+    link_t camera1 = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera1"); // topico ROS
+    link_t camera2 = ufr_subscriber("@new video @@new ros_humble @@coder ros_humble:image @@topic camera2"); // topico ROS
+
+    // Loop principal
+    while( ufr_loop_ok() ) {
+        // Espera receber as duas imagens
+        if ( ufr_recv_sync2(&camera1,&camera2) != UFR_OK ) {
+            break;
+        }
+
+        // Pega as Imagens
+        Mat image1 = ufr_cv_get_mat(&camera1);
+        Mat image2 = ufr_cv_get_mat(&camera2);
+        imshow("janela", image1);
+        imshow("janela", image2);
+        waitKey(1);
+    }
+
+    // Fim
+    ufr_close(&camera1);
+    ufr_close(&camera2);
+    return 0;
+}
+</pre>
+
+
+</div></div>
+
+</body></html>
